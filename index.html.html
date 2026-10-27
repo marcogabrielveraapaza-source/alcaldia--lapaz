@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gobierno Autónomo Municipal de La Paz - Portal de Trámites y Asesor Virtual</title>
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tricolor-stripe {
+            height: 4px;
+            background: linear-gradient(90deg, #84cc16 0%, #facc15 25%, #f97316 50%, #0284c7 75%, #c084fc 100%);
+        }
+        .chat-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .dropdown-menu { display: none; }
+        .dropdown-container:focus-within .dropdown-menu, .dropdown-container.open .dropdown-menu { display: block; }
+        
+        /* Estilos del chat de voz */
+        .mic-active {
+            background-color: #ef4444 !important;
+            color: white !important;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col transition-all duration-200" id="appBody">
+
+    <!-- BARRA TRICOLOR INSTITUCIONAL -->
+    <div class="tricolor-stripe w-full fixed top-0 z-50"></div>
+
+    <!-- ENCABEZADO Y NAVEGACIÓN PRINCIPAL -->
+    <header class="bg-slate-950 text-white shadow-xl fixed top-1 z-40 w-full transition-all border-b-2 border-amber-500/20">
+        <div class="bg-black/70 px-4 py-1 text-xs border-b border-slate-800 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="text-amber-400 font-bold flex items-center gap-1.5">
+                    <i class="fa-solid fa-landmark text-amber-500"></i> GAMLP - La Paz Ciudad Maravilla
+                </span>
+                <span class="hidden md:inline text-slate-400">| Atención Ciudadana 155 iGOB 24/7</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleAccessibilityModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-0.5 rounded-full text-xs flex items-center gap-1 shadow transition">
+                    <i class="fa-solid fa-person-cane"></i> Modo Adulto Mayor
+                </button>
+                <button onclick="adjustFontSize(1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-0.5 rounded font-bold">A+</button>
+                <button onclick="adjustFontSize(-1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-0.5 rounded font-bold">A-</button>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-20">
+            <!-- LADO IZQUIERDO: SOLO EL LOGO (ESCUDO ELIMINADO) -->
+            <div class="flex items-center cursor-pointer group" onclick="navigateTo('home')">
+                <div class="flex items-center">
+                    <!-- Logo más grande y sin fondo -->
+                    <img src="logo.png" alt="Logo La Paz" class="h-14 w-auto object-contain drop-shadow-md transition-transform group-hover:scale-105">
+                </div>
+                <div class="ml-5 border-l border-slate-700 pl-4">
+                    <h1 class="font-black text-xs sm:text-sm leading-tight tracking-wide text-white uppercase drop-shadow-md">Gobierno Autónomo Municipal</h1>
+                    <p class="text-[13px] text-amber-400 font-semibold tracking-wider">de La Paz — Abogado Virtual</p>
+                </div>
+            </div>
+
+            <!-- LADO DERECHO: NAVEGACIÓN -->
+            <div class="flex items-center space-x-4">
+                <nav class="hidden lg:flex items-center space-x-1 text-xs font-semibold">
+                    <div class="relative dropdown-container" id="inicioDropdownContainer">
+                        <button onclick="toggleInicioDropdown(event)" class="px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-sky-400 flex items-center gap-1.5 transition text-sky-300 border border-transparent hover:border-sky-500/30">
+                            <i class="fa-solid fa-house text-sky-400"></i> Inicio <i class="fa-solid fa-chevron-down text-[10px] opacity-70"></i>
+                        </button>
+                        <div id="inicioDropdownMenu" class="dropdown-menu absolute left-0 top-full mt-1 w-64 bg-slate-900 border border-sky-500/30 rounded-xl shadow-2xl py-2 z-50 animate-fade-in">
+                            <a href="#" onclick="navigateTo('home'); scrollToSection('hero'); closeInicioDropdown(); return false;" class="block px-4 py-2 hover:bg-slate-800 hover:text-sky-400 text-xs flex items-center gap-2 transition">
+                                <i class="fa-solid fa-mountain text-lime-400"></i> Presentación La Paz
+                            </a>
+                            <a href="#" onclick="navigateTo('home'); scrollToSection('accesos'); closeInicioDropdown(); return false;" class="block px-4 py-2 hover:bg-slate-800 hover:text-sky-400 text-xs flex items-center gap-2 transition">
+                                <i class="fa-solid fa-cubes text-sky-400"></i> Módulos del Sistema
+                            </a>
+                        </div>
+                    </div>
+
+                    <button onclick="navigateTo('procesos')" class="px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-lime-400 flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-folder-tree text-lime-500"></i> 1. Gestión de Procesos
+                    </button>
+
+                    <button onclick="navigateTo('buscador')" class="px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-sky-400 flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-magnifying-glass-chart text-sky-400"></i> 2. Buscar por C.I.
+                    </button>
+
+                    <button onclick="navigateTo('gaceta')" class="px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-yellow-400 flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-book-bookmark text-yellow-400"></i> 3. Gaceta Normativa
+                    </button>
+
+                    <button onclick="navigateTo('chatbot')" class="bg-purple-500/10 border border-purple-500/30 text-purple-300 px-3 py-2 rounded-lg hover:bg-purple-500 hover:text-slate-950 font-bold flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-robot"></i> 4. Asesor Legal AMI
+                    </button>
+                </nav>
+
+                <button onclick="toggleMobileMenu()" class="lg:hidden text-2xl text-amber-400 focus:outline-none p-2">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menú Móvil -->
+        <div id="mobileMenu" class="hidden lg:hidden bg-slate-900 border-b border-slate-800 px-4 py-3 space-y-2 text-xs font-medium">
+            <button onclick="navigateTo('home'); toggleMobileMenu()" class="w-full text-left py-2 text-sky-300 hover:text-sky-400 font-semibold border-b border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-house text-sky-400"></i> Inicio
+            </button>
+            <button onclick="navigateTo('procesos'); toggleMobileMenu()" class="w-full text-left py-2 text-slate-200 hover:text-lime-400 border-b border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-folder-tree text-lime-500"></i> 1. Gestión de Procesos (Catastro / Expendio)
+            </button>
+            <button onclick="navigateTo('buscador'); toggleMobileMenu()" class="w-full text-left py-2 text-slate-200 hover:text-sky-400 border-b border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-magnifying-glass-chart text-sky-400"></i> 2. Buscador por C.I. y Fecha Nac.
+            </button>
+            <button onclick="navigateTo('gaceta'); toggleMobileMenu()" class="w-full text-left py-2 text-slate-200 hover:text-yellow-400 border-b border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-book-bookmark text-yellow-400"></i> 3. Gaceta Normativa Municipal
+            </button>
+            <button onclick="navigateTo('chatbot'); toggleMobileMenu()" class="w-full text-left py-2 text-purple-300 font-bold border-b border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-robot"></i> 4. Chatbot Asesor Legal (AMI)
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR DE PÁGINAS -->
+    <main class="flex-grow pt-28 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+
+        <!-- INICIO (HOME) REDISEÑADO SEGÚN LA IMAGEN -->
+        <section id="page-home" class="page-view space-y-12">
+            <!-- HERO CON IMAGEN DE FONDO Y PANEL DE LOGOS -->
+            <div id="hero" class="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200 bg-slate-900 flex flex-col md:flex-row items-stretch min-h-[450px]">
+                
+                <!-- Imagen de Fondo (Alcaldía) -->
+                <div class="absolute inset-0 z-0">
+                    <img src="https://images.unsplash.com/photo-1589823595702-bb5743a47e63?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="Alcaldía de La Paz" class="w-full h-full object-cover object-center opacity-40">
+                    <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/80 to-transparent"></div>
+                </div>
+
+                <!-- Contenido Textual (Izquierda) -->
+                <div class="relative z-10 w-full md:w-3/5 p-8 md:p-14 flex flex-col justify-center space-y-6">
+                    <div class="inline-flex items-center gap-2 bg-amber-500/20 backdrop-blur-md border border-amber-400/40 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider w-max">
+                        <i class="fa-solid fa-mountain-sun"></i> La Paz - Capital del Cielo
+                    </div>
+                    <h2 class="text-4xl md:text-6xl font-black tracking-tight leading-none text-white drop-shadow-lg">
+                        CIUDAD<br><span class="text-amber-400">MARAVILLA</span>
+                    </h2>
+                    <p class="text-lg md:text-xl font-light text-slate-200 italic border-l-4 border-lime-500 pl-4">
+                        "Aventúrate en la Ciudad Maravilla: Cultura viva en cada esquina y vistas que te quitarán el aliento."
+                    </p>
+                    <p class="text-xs md:text-sm text-slate-300 leading-relaxed max-w-xl">
+                        Bienvenido al portal inteligente del Gobierno Autónomo Municipal de La Paz. Inicia tus trámites de Catastro SITRAM o Expendio de Bebidas, realiza seguimiento automatizado por Macrodistritos y obtén asesoría legal según la Ley Municipal 001.
+                    </p>
+                    <div class="pt-4 flex flex-wrap gap-3">
+                        <button onclick="navigateTo('procesos')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold px-6 py-3.5 rounded-xl shadow-lg transition flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-file-pen"></i> Iniciar Trámite Municipal
+                        </button>
+                        <button onclick="navigateTo('buscador')" class="bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/30 text-white font-bold px-6 py-3.5 rounded-xl transition flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-magnifying-glass text-amber-400"></i> Buscar por C.I.
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Panel de Logos Estilo Mármol (Derecha) -->
+                <div class="relative z-10 w-full md:w-2/5 hidden md:flex items-center justify-center p-8">
+                    <!-- Contenedor gris claro tipo piedra/mármol -->
+                    <div class="bg-[#e2e8f0] rounded-xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-4 border-[#cbd5e1] flex flex-col items-center gap-6 transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                        <div class="flex items-center gap-6">
+                            <!-- Escudo -->
+                            <img src="escudo.png" alt="Escudo La Paz" class="h-28 w-auto object-contain drop-shadow-md">
+                            <!-- Logo -->
+                            <img src="logo.png" alt="Logo La Paz" class="h-24 w-auto object-contain drop-shadow-md">
+                        </div>
+                        <div class="border-t-2 border-slate-400 w-full pt-4 text-center">
+                            <p class="text-slate-700 font-black tracking-widest text-sm uppercase">Gobierno Autónomo</p>
+                            <p class="text-slate-700 font-black tracking-widest text-sm uppercase">Municipal de La Paz</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULOS PRINCIPALES REDISEÑADOS (ESTILO IMAGEN) -->
+            <div id="accesos" class="space-y-6 pt-4">
+                <div class="flex items-center justify-between border-b-2 pb-3 border-slate-200">
+                    <h3 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                        <div class="w-2 h-8 bg-amber-500 rounded-full"></div> Módulos Principales
+                    </h3>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Portal de Trámites 24/7</span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Módulo 1 -->
+                    <div onclick="navigateTo('procesos')" class="group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl border border-slate-200 hover:border-amber-400 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col items-start">
+                        <div class="w-14 h-14 rounded-2xl bg-amber-400 text-slate-900 flex items-center justify-center text-2xl font-bold mb-4 group-hover:scale-110 transition-transform shadow-md">
+                            <i class="fa-solid fa-folder-tree"></i>
+                        </div>
+                        <h4 class="font-black text-slate-900 text-lg group-hover:text-amber-600 transition-colors">Gestión de Procesos</h4>
+                        <p class="text-xs text-slate-500 mt-2 leading-relaxed font-medium">Gestión de trámites para licencias y catastro urbano.</p>
+                        <div class="mt-4 pt-4 border-t border-slate-100 w-full flex justify-between items-center text-xs font-bold text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span>Ingresar</span> <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- Módulo 2 -->
+                    <div onclick="navigateTo('buscador')" class="group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl border border-slate-200 hover:border-sky-400 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col items-start">
+                        <div class="w-14 h-14 rounded-2xl bg-sky-400 text-white flex items-center justify-center text-2xl font-bold mb-4 group-hover:scale-110 transition-transform shadow-md">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i>
+                        </div>
+                        <h4 class="font-black text-slate-900 text-lg group-hover:text-sky-600 transition-colors">Buscador por C.I.</h4>
+                        <p class="text-xs text-slate-500 mt-2 leading-relaxed font-medium">Buscador meticuloso del estado de tu trámite por C.I.</p>
+                        <div class="mt-4 pt-4 border-t border-slate-100 w-full flex justify-between items-center text-xs font-bold text-sky-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span>Ingresar</span> <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- Módulo 3 -->
+                    <div onclick="navigateTo('gaceta')" class="group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl border border-slate-200 hover:border-emerald-400 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col items-start">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl font-bold mb-4 group-hover:scale-110 transition-transform shadow-md">
+                            <i class="fa-solid fa-book-bookmark"></i>
+                        </div>
+                        <h4 class="font-black text-slate-900 text-lg group-hover:text-emerald-600 transition-colors">Gaceta Normativa</h4>
+                        <p class="text-xs text-slate-500 mt-2 leading-relaxed font-medium">Gaceta normativa con leyes, decretos y ordenanzas.</p>
+                        <div class="mt-4 pt-4 border-t border-slate-100 w-full flex justify-between items-center text-xs font-bold text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span>Ingresar</span> <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- Módulo 4 -->
+                    <div onclick="navigateTo('chatbot')" class="group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl border border-slate-200 hover:border-purple-400 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col items-start">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-500 text-white flex items-center justify-center text-2xl font-bold mb-4 group-hover:scale-110 transition-transform shadow-md">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <h4 class="font-black text-slate-900 text-lg group-hover:text-purple-600 transition-colors">Asesor Virtual AMI</h4>
+                        <p class="text-xs text-slate-500 mt-2 leading-relaxed font-medium">Asesor legal automatizado con módulos de voz e IA.</p>
+                        <div class="mt-4 pt-4 border-t border-slate-100 w-full flex justify-between items-center text-xs font-bold text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span>Ingresar</span> <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 1: GESTIÓN DE PROCESOS -->
+        <section id="page-procesos" class="page-view hidden space-y-6">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+                <div class="bg-slate-950 text-white p-6 border-b border-amber-500/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <span class="text-amber-400 text-xs font-bold uppercase tracking-wider">Módulo de Solicitudes Municipales</span>
+                        <h2 class="text-2xl font-black text-white mt-0.5">1. Gestión de Procesos Administrativos</h2>
+                        <p class="text-xs text-slate-300 mt-1">Inicie sus trámites ante el GAMLP con validez jurídica y técnica.</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-100 p-2 border-b border-slate-200 flex flex-wrap gap-2">
+                    <button id="tabBtnCatastro" onclick="switchSubTab('catastro')" class="flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 bg-slate-950 text-amber-400 shadow-md">
+                        <i class="fa-solid fa-building-user"></i> Área A: Trámites de Catastro (SITRAM)
+                    </button>
+                    <button id="tabBtnExpendio" onclick="switchSubTab('expendio')" class="flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200">
+                        <i class="fa-solid fa-wine-glass"></i> Área B: Licencias de Expendio de Bebidas
+                    </button>
+                </div>
+
+                <div id="subtab-catastro" class="p-6 md:p-8 space-y-6">
+                    <div class="border-b pb-3 border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-map-location-dot text-amber-600"></i> Formulario de Registro Catastral Urbano
+                        </h3>
+                    </div>
+
+                    <form onsubmit="handleCatastroSubmit(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Código Catastral</label>
+                                <input type="text" id="catCodigo" placeholder="Ej. 132-045-0012 LP" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nombre del Propietario</label>
+                                <input type="text" id="catPropietario" placeholder="Nombre completo del titular" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Dirección del Inmueble (Zona / Macrodistrito)</label>
+                                <input type="text" id="catDireccion" placeholder="Ej. Av. Arce N° 2105, Sopocachi - Macrodistrito Cotahuma" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Superficie Terreno en m²</label>
+                                <input type="number" step="0.01" id="catSuperficie" placeholder="Ej. 280.50" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 text-xs">
+                            </div>
+                        </div>
+
+                        <div class="pt-2 flex justify-end">
+                            <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition flex items-center gap-2 text-xs">
+                                <i class="fa-solid fa-paper-plane"></i> Iniciar Trámite Catastral
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="catastroSuccessAlert" class="hidden p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-500 text-emerald-900 space-y-3 shadow-md animate-fade-in">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-2xl"></i>
+                            <div>
+                                <h4 class="font-extrabold text-sm">¡Trámite Catastral Iniciado con Éxito!</h4>
+                                <p class="text-xs text-emerald-700">Registrado en la Dirección de Catastro SITRAM del GAMLP.</p>
+                            </div>
+                        </div>
+                        <div class="bg-white/90 p-3 rounded-xl border border-emerald-200 text-xs font-mono space-y-1">
+                            <p><strong>Nro. Comprobante:</strong> <span id="resCatComp" class="text-emerald-700 font-bold"></span></p>
+                            <p><strong>Código Catastral:</strong> <span id="resCatCod"></span></p>
+                            <p><strong>Titular:</strong> <span id="resCatProp"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="subtab-expendio" class="hidden p-6 md:p-8 space-y-6">
+                    <div class="border-b pb-3 border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-store text-amber-600"></i> Solicitud de Licencia para Expendio de Bebidas
+                        </h3>
+                    </div>
+
+                    <form onsubmit="handleExpendioSubmit(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Nombre del Establecimiento</label>
+                                <input type="text" id="expNombre" placeholder="Ej. Peña & Restaurant El Illimani" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Categoría del Local</label>
+                                <select id="expTipo" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 text-xs bg-white">
+                                    <option value="">Seleccione categoría...</option>
+                                    <option value="Restaurante con Expendio">Restaurante / Peña Cultural</option>
+                                    <option value="Bar / Cantina">Bar / Cantina Tradicional</option>
+                                    <option value="Licorería / Comercial">Licorería / Comercio Mediano</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Cédula de Identidad con Extensión</label>
+                                <input type="text" id="expCi" placeholder="Ej. 6841235 LP" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Adjuntar PDF (Requisitos OM 120/2021)</label>
+                                <input type="file" accept=".pdf" required class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-slate-50">
+                            </div>
+                        </div>
+
+                        <div class="pt-2 flex justify-end">
+                            <button type="submit" class="bg-slate-950 hover:bg-slate-800 text-amber-400 font-extrabold px-6 py-3 rounded-xl shadow-lg transition flex items-center gap-2 text-xs">
+                                <i class="fa-solid fa-file-export"></i> Enviar Solicitud a Intendencia
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="expendioSuccessAlert" class="hidden p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-500 text-emerald-900 space-y-3 shadow-md animate-fade-in">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-2xl"></i>
+                            <div>
+                                <h4 class="font-extrabold text-sm">¡Solicitud de Licencia Enviada!</h4>
+                                <p class="text-xs text-emerald-700">La Intendencia Municipal coordinará la inspección física en el local.</p>
+                            </div>
+                        </div>
+                        <div class="bg-white/90 p-3 rounded-xl border border-emerald-200 text-xs font-mono space-y-1">
+                            <p><strong>Código de Registro:</strong> <span id="resExpComp" class="text-emerald-700 font-bold"></span></p>
+                            <p><strong>Establecimiento:</strong> <span id="resExpNom"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: BUSCADOR CON BASE DE DATOS PACEÑA Y TARJETAS INTERACTIVAS -->
+        <section id="page-buscador" class="page-view hidden space-y-8">
+            <div id="searchAccessForm" class="space-y-8">
+                <div class="max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-2xl space-y-6">
+                    <div class="text-center space-y-2">
+                        <div class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-2xl mx-auto border border-amber-200">
+                            <i class="fa-solid fa-id-card"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-slate-900">Consulta el Estado de tu Trámite</h3>
+                        <p class="text-xs text-slate-500">Ingrese su Cédula de Identidad y Fecha de Nacimiento registradas en el GAMLP.</p>
+                    </div>
+
+                    <form onsubmit="searchProcess(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Número de Cédula de Identidad (C.I.)</label>
+                            <input type="text" id="searchCi" placeholder="Ej. 6841235 LP" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 font-mono text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Fecha de Nacimiento</label>
+                            <input type="date" id="searchDob" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 text-xs">
+                        </div>
+                        <button type="submit" class="w-full bg-slate-950 hover:bg-slate-800 text-amber-400 font-extrabold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-xs">
+                            <i class="fa-solid fa-magnifying-glass"></i> Buscar Trámite en Sistema
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-xl space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                        <div>
+                            <span class="text-amber-400 text-[10px] font-bold uppercase tracking-wider">Demo de Consultas Rápidas</span>
+                            <h4 class="text-lg font-extrabold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-users text-amber-500"></i> Base de Datos Predeterminada (10 Personas de La Paz)
+                            </h4>
+                        </div>
+                        <p class="text-xs text-slate-400">Haz clic en cualquier tarjeta para probar la búsqueda instantánea:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" id="demoCardsGrid"></div>
+                </div>
+            </div>
+
+            <div id="searchResultArea" class="hidden bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-2xl space-y-8 animate-fade-in">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b pb-6 border-slate-200">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="bg-amber-100 text-amber-900 border border-amber-300 px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider" id="resMacroChip">
+                                <i class="fa-solid fa-map-pin text-amber-600"></i> Macrodistrito
+                            </span>
+                            <span class="text-xs text-slate-400">| Código Expediente GAMLP</span>
+                        </div>
+                        <h3 id="resTramiteTitulo" class="text-2xl font-black text-slate-900">Licencia de Expendio de Bebidas</h3>
+                        <p class="text-xs text-slate-600">
+                            Titular: <strong id="resTitularNombre" class="text-slate-900">Juan Carlos Mamani</strong> (C.I. <span id="resTitularCi" class="font-mono font-bold">6841235 LP</span>)
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="resEstadoBadge" class="px-4 py-1.5 rounded-full text-xs font-black shadow-sm border">
+                            Estado: En Revisión
+                        </span>
+                        <button onclick="resetSearch()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-left"></i> Volver a buscar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50/70 border border-amber-200 p-4 rounded-2xl flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-lg shrink-0 shadow">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-xs font-bold text-amber-950 uppercase tracking-wider">Ubicación del Inmueble / Establecimiento en La Paz</h5>
+                        <p id="resUbicacionTexto" class="text-xs font-semibold text-slate-800 mt-0.5">Sopocachi, Av. Arce N° 2105 - Macrodistrito Cotahuma</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Jurisdicción de la Subalcaldía correspondiente para inspecciones y notificaciones.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <i class="fa-solid fa-diagram-next text-amber-600"></i> Progreso y Estado de Etapas (Línea de Tiempo):
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="steppersContainer"></div>
+                </div>
+
+                <div class="bg-slate-950 text-white p-5 rounded-2xl space-y-2 border border-slate-800 shadow-md">
+                    <h5 class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-gavel"></i> Dictamen Jurídico / Observación del GAMLP:
+                    </h5>
+                    <p id="resDictamen" class="text-xs text-slate-200 leading-relaxed font-sans"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 3: GACETA NORMATIVA -->
+        <section id="page-gaceta" class="page-view hidden space-y-8">
+            <div class="bg-gradient-to-r from-slate-950 to-slate-800 text-white p-6 rounded-2xl border-l-8 border-emerald-500 shadow-md">
+                <span class="text-emerald-400 text-xs font-bold uppercase tracking-wider">Compendio Jurídico La Paz</span>
+                <h2 class="text-2xl font-black mt-1">3. Gaceta Normativa Municipal</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="gacetaGrid"></div>
+        </section>
+
+        <!-- SECCIÓN 4: CHATBOT AMI (VISTA INTEGRADA) -->
+        <section id="page-chatbot" class="page-view hidden space-y-8">
+            <div class="bg-gradient-to-r from-blue-950 to-slate-900 text-white p-6 rounded-2xl border-l-8 border-sky-500 shadow-md flex justify-between items-center">
+                <div>
+                    <span class="text-sky-400 text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-scale-balanced"></i> Asistencia Legal Municipal</span>
+                    <h2 class="text-2xl font-black mt-1">4. Asesor Legal Virtual — AMI</h2>
+                    <p class="text-xs text-slate-300 mt-1">Consultas automatizadas sobre normativas paceñas 24/7.</p>
+                </div>
+                <i class="fa-solid fa-robot text-5xl text-sky-500/50"></i>
+            </div>
+            
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden h-[600px] flex flex-col max-w-4xl mx-auto">
+                <!-- Encabezado del Chat Integrado -->
+                <div class="bg-gradient-to-r from-blue-900 to-slate-900 text-white p-4 flex justify-between items-center border-b border-blue-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-lg shadow">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-extrabold text-sm text-amber-400">Asesor Legal Virtual - Procedimientos</h4>
+                            <p class="text-[11px] text-emerald-400 flex items-center gap-1 font-semibold">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> En línea (La Paz - Bolivia)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Área de Mensajes Integrada -->
+                <div id="fullChatMessages" class="flex-grow p-4 overflow-y-auto space-y-4 bg-slate-50 text-xs chat-scroll">
+                    <div class="flex items-start gap-2.5">
+                        <div class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">AMI</div>
+                        <div class="bg-white p-3.5 rounded-2xl rounded-tl-none border border-slate-200 text-slate-800 space-y-2 shadow-sm">
+                            <p class="font-semibold text-slate-900 text-sm">¡Hola! Soy tu asesor legal virtual. Te puedo ayudar con plazos, requisitos y normativas de tus trámites administrativos. ¿Qué deseas consultar hoy?</p>
+                        </div>
+                    </div>
+                    <!-- Botones de respuesta rápida fijos en la bienvenida -->
+                    <div class="space-y-2 pl-10 pt-2" id="quickOptionsIntegrado">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Preguntas Frecuentes:</p>
+                        <button onclick="sendQuickOption('Plazos de respuesta legal', 'full')" class="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-semibold px-3 py-2 rounded-xl text-xs transition flex items-center justify-between shadow-sm">
+                            <span>⏱️ Plazos de respuesta legal</span><i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                        <button onclick="sendQuickOption('Cómo apelar una resolución', 'full')" class="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-semibold px-3 py-2 rounded-xl text-xs transition flex items-center justify-between shadow-sm">
+                            <span>⚖️ Cómo apelar una resolución</span><i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                        <button onclick="sendQuickOption('Requisitos para licencias', 'full')" class="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-semibold px-3 py-2 rounded-xl text-xs transition flex items-center justify-between shadow-sm">
+                            <span>📜 Requisitos para licencias</span><i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Integrado -->
+                <form onsubmit="handleChatSubmit(event, 'full')" class="p-3 bg-white border-t border-slate-200 flex gap-2 items-center">
+                    <button type="button" id="btnMicFull" onclick="toggleDictado('fullChatInput', 'btnMicFull')" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition shrink-0" title="Dictar por voz">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <input type="text" id="fullChatInput" placeholder="Escribe tu consulta legal (Ej. Catastro, licencias, apelaciones)..." required class="flex-grow px-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    <button type="submit" class="bg-blue-800 hover:bg-blue-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow">
+                        <span>Enviar</span> <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTÓN FLOTANTE CIRCULAR DEL CHAT -->
+    <button onclick="toggleChatWidget()" id="floatingChatBtn" class="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 text-slate-950 shadow-2xl flex items-center justify-center text-3xl border-4 border-slate-900 z-50 hover:scale-110 transition-transform duration-200">
+        <i class="fa-solid fa-robot"></i>
+        <span class="absolute top-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 animate-ping"></span>
+        <span class="absolute top-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900"></span>
+    </button>
+
+    <!-- VENTANA FLOTANTE DEL CHAT -->
+    <div id="chatWidgetContainer" class="fixed bottom-24 right-6 w-80 sm:w-[400px] bg-white rounded-3xl shadow-2xl border border-slate-300 overflow-hidden hidden z-50 transition-all duration-300 animate-fade-in flex flex-col h-[550px]">
+        <!-- Encabezado -->
+        <div class="bg-gradient-to-r from-blue-900 to-slate-900 text-white p-4 flex justify-between items-center border-b border-blue-700 shrink-0">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-sm shadow">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-xs text-amber-400">Asesor Legal Virtual - Procedimientos</h4>
+                    <p class="text-[10px] text-emerald-400 flex items-center gap-1 font-semibold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> En línea (La Paz)
+                    </p>
+                </div>
+            </div>
+            <button onclick="toggleChatWidget()" class="text-slate-300 hover:text-white text-xl p-1">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Mensajes -->
+        <div id="widgetChatMessages" class="flex-grow p-4 overflow-y-auto space-y-4 bg-slate-50 text-xs chat-scroll">
+            <div class="flex items-start gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">AMI</div>
+                <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-200 text-slate-800 space-y-2 shadow-sm">
+                    <p class="font-semibold text-slate-900 text-sm">¡Hola! Soy tu asesor legal virtual. Te puedo ayudar con plazos, requisitos y normativas de tus trámites administrativos. ¿Qué deseas consultar hoy?</p>
+                </div>
+            </div>
+
+            <!-- Botones de respuesta rápida fijos en la bienvenida -->
+            <div class="space-y-2 pl-10 pt-1" id="quickOptionsFlotante">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Preguntas Frecuentes:</p>
+                <button onclick="sendQuickOption('Plazos de respuesta legal', 'widget')" class="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-semibold px-3 py-2 rounded-xl text-xs transition flex items-center justify-between shadow-sm">
+                    <span>⏱️ Plazos de respuesta legal</span><i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+                <button onclick="sendQuickOption('Cómo apelar una resolución', 'widget')" class="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-semibold px-3 py-2 rounded-xl text-xs transition flex items-center justify-between shadow-sm">
+                    <span>⚖️ Cómo apelar una resolución</span><i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+                <button onclick="sendQuickOption('Requisitos para licencias', 'widget')" class="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-semibold px-3 py-2 rounded-xl text-xs transition flex items-center justify-between shadow-sm">
+                    <span>📜 Requisitos para licencias</span><i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <form onsubmit="handleChatSubmit(event, 'widget')" class="p-3 bg-white border-t border-slate-200 flex gap-2 items-center shrink-0">
+            <button type="button" id="btnMicWidget" onclick="toggleDictado('widgetChatInput', 'btnMicWidget')" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition shrink-0" title="Dictar por voz">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+            <input type="text" id="widgetChatInput" placeholder="Escribe tu consulta legal..." required class="flex-grow px-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600">
+            <button type="submit" class="bg-blue-800 hover:bg-blue-900 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1 shadow">
+                <i class="fa-solid fa-paper-plane text-[10px]"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- MODAL ACCESIBILIDAD ADULTO MAYOR -->
+    <div id="accessibilityModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white max-w-xl w-full rounded-3xl shadow-2xl border-4 border-amber-500 p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-xl font-black text-amber-600 flex items-center gap-2">
+                    <i class="fa-solid fa-person-cane"></i> Modo Adulto Mayor & Accesibilidad
+                </h3>
+                <button onclick="toggleAccessibilityModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                El Gobierno Autónomo Municipal de La Paz facilita el acceso a personas de la tercera edad mediante lectura asistida por voz para realizar seguimiento a sus trámites de exención de impuestos y catastro.
+            </p>
+            <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 space-y-2">
+                <button onclick="speakText('Bienvenido al portal web del Gobierno Autónomo Municipal de La Paz. Puede consultar su trámite ingresando su número de cédula de identidad en la sección buscador.')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-volume-high"></i> Escuchar Instrucciones en Voz Alta
+                </button>
+            </div>
+            <div class="pt-2 flex justify-end">
+                <button onclick="toggleAccessibilityModal()" class="bg-slate-200 text-slate-800 font-bold px-4 py-2 rounded-xl text-xs">Cerrar Ventana</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER INSTITUCIONAL -->
+    <footer class="bg-slate-950 text-slate-400 text-xs py-6 border-t border-slate-800 mt-auto text-center space-y-1">
+        <p class="font-bold text-slate-300">Gobierno Autónomo Municipal de La Paz (GAMLP) — Abogado Virtual & Gestor Normativo</p>
+        <p class="text-[11px] text-slate-500">Palacio Consistorial: Calle Mercado esq. Socabaya. La Paz, Bolivia.</p>
+    </footer>
+
+    <!-- LÓGICA JAVASCRIPT Y BASE DE DATOS PACEÑA -->
+    <script>
+        const demoDatabase = [
+            { ci: "6841235 LP", dob: "1985-04-12", nombre: "Juan Carlos Mamani Calle", tramite: "Licencia de Expendio de Bebidas OM 120/2021", codigo: "EXP-2026-98765", ubicacion: "Sopocachi, Av. Arce N° 2105", macrodistrito: "Macrodistrito Cotahuma", estado: "En Revisión Técnica", pasoActual: 3, dictamen: "Inspección técnica de seguridad programada por la Intendencia Municipal de Cotahuma.", badgeBg: "bg-amber-100 text-amber-900 border-amber-300" },
+            { ci: "4598123 LP", dob: "1990-08-23", nombre: "María Elena Quispe Condori", tramite: "Certificado Catastral Urbano SITRAM", codigo: "CAT-2026-4412", ubicacion: "Calacoto, Calle 15 N° 8020", macrodistrito: "Macrodistrito Sur", estado: "Aprobado", pasoActual: 4, dictamen: "Planos georeferenciados validados en el sistema SITRAM. Certificado disponible en ventanilla de la Subalcaldía Sur.", badgeBg: "bg-emerald-100 text-emerald-900 border-emerald-300" },
+            { ci: "3321456 LP", dob: "1978-11-05", nombre: "Roberto Gómez Condori", tramite: "Recurso de Revocatoria Ley 001", codigo: "REV-2026-1092", ubicacion: "San Pedro, Calle Nicolás Acosta N° 450", macrodistrito: "Macrodistrito Centro", estado: "Observado", pasoActual: 2, dictamen: "Observación jurídica: Adjuntar fotocopia legalizada de Título de Propiedad para continuar el trámite.", badgeBg: "bg-rose-100 text-rose-900 border-rose-300" },
+            { ci: "7812349 LP", dob: "1992-03-30", nombre: "Lucía Andrea Vargas Mendoza", tramite: "Visado de Plano LUSO (Regularización)", codigo: "REG-2026-8821", ubicacion: "Miraflores, Av. Saavedra N° 1200", macrodistrito: "Macrodistrito Centro", estado: "Aprobado", pasoActual: 4, dictamen: "Plano arquitectónico aprobado conforme a la Ley LUSO de Regularización de Edificaciones.", badgeBg: "bg-emerald-100 text-emerald-900 border-emerald-300" },
+            { ci: "5123987 LP", dob: "1982-06-18", nombre: "Carlos Eduardo Gutiérrez Aliaga", tramite: "Licencia de Funcionamiento Comercio Mediano", codigo: "LIC-2026-5521", ubicacion: "Av. Mariscal Santa Cruz - Casco Urbano Central", macrodistrito: "Macrodistrito Centro", estado: "En Revisión Técnica", pasoActual: 3, dictamen: "Revisión de requisitos ambientales por la Subalcaldía Centro. Pendiente reporte de acústica.", badgeBg: "bg-amber-100 text-amber-900 border-amber-300" },
+            { ci: "9123847 LP", dob: "1965-09-14", nombre: "Esperanza Choque de Aliaga", tramite: "Exención Impuestos Adulto Mayor (Ley 001)", codigo: "EXE-2026-9920", ubicacion: "Achumani, Calle 22 N° 310", macrodistrito: "Macrodistrito Sur", estado: "Aprobado", pasoActual: 4, dictamen: "Descuento del 20% aplicado sobre el impuesto inmueble gestión 2025 para persona de la tercera edad.", badgeBg: "bg-emerald-100 text-emerald-900 border-emerald-300" },
+            { ci: "6142381 LP", dob: "1988-12-01", nombre: "Fernando Javier Mendoza Paz", tramite: "Renovación Licencia de Expendio de Bebidas", codigo: "EXP-2026-3310", ubicacion: "Pampahasi, Av. Ciudad del Niño N° 88", macrodistrito: "Macrodistrito San Antonio", estado: "Aprobado", pasoActual: 4, dictamen: "Licencia renovada con código QR institucional para la gestión 2026.", badgeBg: "bg-emerald-100 text-emerald-900 border-emerald-300" },
+            { ci: "2834192 LP", dob: "1974-07-22", nombre: "Rosa Ana Nina Apaza", tramite: "Desglose Catastral en Propiedad Horizontal", codigo: "CAT-2026-7711", ubicacion: "Villa Fátima, Av. Tejada Sorzano N° 620", macrodistrito: "Macrodistrito Periférica", estado: "En Revisión Técnica", pasoActual: 2, dictamen: "Verificación de matriz catastral madre en el Archivo Técnico Central del GAMLP.", badgeBg: "bg-amber-100 text-amber-900 border-amber-300" },
+            { ci: "8372615 LP", dob: "1995-05-15", nombre: "Diego Alejandro Torrez Siles", tramite: "Impugnación Notificación Intendencia", codigo: "IMP-2026-1204", ubicacion: "La Portada, Av. Kollasuyo N° 1040", macrodistrito: "Macrodistrito Max Paredes", estado: "Observado", pasoActual: 1, dictamen: "Recurso presentado fuera del plazo legal estipulado de 5 días hábiles conforme a Ley 001.", badgeBg: "bg-rose-100 text-rose-900 border-rose-300" },
+            { ci: "4928173 LP", dob: "1980-01-29", nombre: "Patricia Silva Beltrán", tramite: "Certificado de Compatibilidad de Uso de Suelo", codigo: "USO-2026-9011", ubicacion: "Obrajes, Calle 6 N° 450", macrodistrito: "Macrodistrito Sur", estado: "Aprobado", pasoActual: 4, dictamen: "Zonificación compatible según mapa de riesgos del GAMLP para uso comercial bajo normatividad.", badgeBg: "bg-emerald-100 text-emerald-900 border-emerald-300" }
+        ];
+
+        const gacetaData = [
+            { titulo: "Ley Municipal Autonómica N° 001", tag: "Normativa Base", desc: "Regula el procedimiento administrativo sancionador y recursos de impugnación ciudadana en el GAMLP." },
+            { titulo: "Ordenanza Municipal N° 120/2021", tag: "Expendio Bebidas", desc: "Reglamento para el funcionamiento de locales de expendio de bebidas alcohólicas y peñas culturales en La Paz." },
+            { titulo: "Ley LUSO de Regularización Edilicia", tag: "Catastro & Obras", desc: "Permite la regularización de construcciones informales en los 7 macrodistritos urbanos paceños." }
+        ];
+
+        // --- LÓGICA DEL CHATBOT AMI ---
+
+        function toggleInicioDropdown(e) {
+            e.stopPropagation();
+            document.getElementById('inicioDropdownContainer').classList.toggle('open');
+        }
+        function closeInicioDropdown() {
+            document.getElementById('inicioDropdownContainer').classList.remove('open');
+        }
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('inicioDropdownContainer');
+            if (container && !container.contains(e.target)) {
+                container.classList.remove('open');
+            }
+        });
+
+        function navigateTo(pageId) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+            const target = document.getElementById(`page-${pageId}`);
+            if(target) target.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            closeInicioDropdown();
+        }
+
+        function scrollToSection(secId) {
+            setTimeout(() => {
+                const el = document.getElementById(secId);
+                if(el) el.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+
+        function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('hidden'); }
+
+        function switchSubTab(type) {
+            if(type === 'catastro') {
+                document.getElementById('subtab-catastro').classList.remove('hidden');
+                document.getElementById('subtab-expendio').classList.add('hidden');
+                document.getElementById('tabBtnCatastro').className = "flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 bg-slate-950 text-amber-400 shadow-md";
+                document.getElementById('tabBtnExpendio').className = "flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200";
+            } else {
+                document.getElementById('subtab-catastro').classList.add('hidden');
+                document.getElementById('subtab-expendio').classList.remove('hidden');
+                document.getElementById('tabBtnExpendio').className = "flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 bg-slate-950 text-amber-400 shadow-md";
+                document.getElementById('tabBtnCatastro').className = "flex-1 min-w-[200px] py-3 px-4 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200";
+            }
+        }
+
+        function handleCatastroSubmit(e) {
+            e.preventDefault();
+            document.getElementById('resCatComp').innerText = "CAT-2026-" + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('resCatCod').innerText = document.getElementById('catCodigo').value;
+            document.getElementById('resCatProp').innerText = document.getElementById('catPropietario').value;
+            document.getElementById('catastroSuccessAlert').classList.remove('hidden');
+        }
+
+        function handleExpendioSubmit(e) {
+            e.preventDefault();
+            document.getElementById('resExpComp').innerText = "EXP-2026-" + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('resExpNom').innerText = document.getElementById('expNombre').value;
+            document.getElementById('expendioSuccessAlert').classList.remove('hidden');
+        }
+
+        function selectDemoUser(ci) {
+            const user = demoDatabase.find(p => p.ci === ci);
+            if(user) {
+                document.getElementById('searchCi').value = user.ci;
+                document.getElementById('searchDob').value = user.dob;
+                searchProcessByMatch(user);
+            }
+        }
+
+        function searchProcess(e) {
+            e.preventDefault();
+            const ci = document.getElementById('searchCi').value.trim();
+            const dob = document.getElementById('searchDob').value;
+            const match = demoDatabase.find(p => p.ci.toLowerCase() === ci.toLowerCase() && p.dob === dob);
+            if(match) { searchProcessByMatch(match); } 
+            else { alert("No se encontró ningún trámite registrado con esa C.I. y Fecha de Nacimiento en la base del GAMLP."); }
+        }
+
+        function searchProcessByMatch(match) {
+            document.getElementById('resTramiteTitulo').innerText = `${match.tramite} (${match.codigo})`;
+            document.getElementById('resTitularNombre').innerText = match.nombre;
+            document.getElementById('resTitularCi').innerText = match.ci;
+            document.getElementById('resUbicacionTexto').innerText = `${match.ubicacion} — ${match.macrodistrito}`;
+            document.getElementById('resMacroChip').innerHTML = `<i class="fa-solid fa-map-pin text-amber-600"></i> ${match.macrodistrito}`;
+            document.getElementById('resDictamen').innerText = match.dictamen;
+            const badge = document.getElementById('resEstadoBadge');
+            badge.innerText = `Estado: ${match.estado}`;
+            badge.className = `px-4 py-1.5 rounded-full text-xs font-black shadow-sm border ${match.badgeBg}`;
+            renderStepper(match.pasoActual);
+            document.getElementById('searchAccessForm').classList.add('hidden');
+            document.getElementById('searchResultArea').classList.remove('hidden');
+            window.scrollTo({ top: 100, behavior: 'smooth' });
+        }
+
+        function renderStepper(stepActive) {
+            const container = document.getElementById('steppersContainer');
+            const steps = [
+                { title: "1. Solicitado", desc: "Ingreso en Ventanilla iGOB" },
+                { title: "2. Validación Docs", desc: "Filtro Técnico Jurídico" },
+                { title: "3. Inspección Técnica", desc: "Evaluación In Situ" },
+                { title: "4. Emisión de Licencia", desc: "Firma y Aprobación Edil" }
+            ];
+            let html = "";
+            steps.forEach((st, idx) => {
+                const stepNum = idx + 1;
+                if(stepNum < stepActive) {
+                    html += `<div class="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-500 text-slate-900 space-y-2 shadow-sm"><div class="flex items-center justify-between"><span class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">${stepNum}</span><i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i></div><h5 class="font-extrabold text-xs text-slate-900">${st.title}</h5><span class="inline-block text-[10px] bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full font-bold">Completado</span></div>`;
+                } else if(stepNum === stepActive) {
+                    html += `<div class="p-4 rounded-2xl bg-amber-50 border-2 border-amber-500 text-slate-900 space-y-2 shadow-md"><div class="flex items-center justify-between"><span class="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-bold text-xs flex items-center justify-center">${stepNum}</span><i class="fa-solid fa-spinner text-amber-600 text-lg animate-spin"></i></div><h5 class="font-extrabold text-xs text-slate-900">${st.title}</h5><span class="inline-block text-[10px] bg-amber-200 text-amber-950 px-2 py-0.5 rounded-full font-bold">En Curso</span></div>`;
+                } else {
+                    html += `<div class="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 text-slate-400 space-y-2 opacity-70"><div class="flex items-center justify-between"><span class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center">${stepNum}</span><i class="fa-solid fa-hourglass-start text-slate-400 text-lg"></i></div><h5 class="font-extrabold text-xs text-slate-500">${st.title}</h5><span class="inline-block text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-bold">Pendiente</span></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function resetSearch() {
+            document.getElementById('searchResultArea').classList.add('hidden');
+            document.getElementById('searchAccessForm').classList.remove('hidden');
+        }
+
+        // --- CONTROL DEL CHAT (FLOTANTE Y PANTALLA COMPLETA) ---
+        function toggleChatWidget() {
+            const widget = document.getElementById('chatWidgetContainer');
+            widget.classList.toggle('hidden');
+        }
+
+        function getLegalResponse(query) {
+            const text = query.toLowerCase();
+            if (text.includes('plazo') || text.includes('tiempo') || text.includes('tarda')) {
+                return "Conforme a la Ley Municipal Autonómica N° 001 del GAMLP, el plazo máximo reglamentario para resolver peticiones o emitir dictamen es de 15 a 30 días hábiles. Para Catastro (SITRAM), el certificado suele estar listo en 10 días.";
+            } else if (text.includes('apelar') || text.includes('resolucion') || text.includes('impugnar') || text.includes('multa') || text.includes('revocatoria')) {
+                return "Si la Intendencia o Subalcaldía te notifica con una sanción, puedes presentar un Recurso de Revocatoria en un plazo máximo de 10 días hábiles desde la notificación. Debe dirigirse a la autoridad que emitió el acto, adjuntando tu C.I. y las pruebas.";
+            } else if (text.includes('licencia') || text.includes('bebida') || text.includes('local') || text.includes('requisito') || text.includes('catastro')) {
+                return "Para Licencias de Expendio (OM 120/2021): C.I., Folio Real, Plano de ubicación, certificado de zonificación (distancia mínima de 100m de escuelas). Para Catastro: Título de propiedad, planos visados por arquitecto y comprobante de pago de impuestos al día.";
+            } else if (text.includes('hola') || text.includes('buenas') || text.includes('saludos')) {
+                return "¡Hola! Un gusto saludarte. Como Asesor Legal del GAMLP, estoy listo para resolver tus dudas sobre trámites municipales en La Paz. ¿Qué trámite estás realizando?";
+            }
+            return "Entiendo tu consulta. Para brindarte una respuesta exacta con base legal, te recomiendo consultar la Gaceta Normativa de La Paz o acercarte a la Subalcaldía de tu macrodistrito. ¿Tienes otra duda sobre plazos o requisitos?";
+        }
+
+        // Función unificada para manejar el envío de mensajes
+        function handleChatSubmit(e, type) {
+            e.preventDefault();
+            const inputId = type === 'full' ? 'fullChatInput' : 'widgetChatInput';
+            const input = document.getElementById(inputId);
+            if(!input.value.trim()) return;
+            const userMsg = input.value;
+            input.value = '';
+            appendMessage(userMsg, 'user', type);
+            
+            setTimeout(() => {
+                const response = getLegalResponse(userMsg);
+                appendMessage(response, 'bot', type);
+            }, 500);
+        }
+
+        function sendQuickOption(optionText, type) {
+            // Ocultar botones rápidos
+            const qId = type === 'full' ? 'quickOptionsIntegrado' : 'quickOptionsFlotante';
+            document.getElementById(qId).style.display = 'none';
+            
+            appendMessage(optionText, 'user', type);
+            setTimeout(() => {
+                const response = getLegalResponse(optionText);
+                appendMessage(response, 'bot', type);
+            }, 500);
+        }
+
+        function appendMessage(msg, sender, type) {
+            const boxId = type === 'full' ? 'fullChatMessages' : 'widgetChatMessages';
+            const box = document.getElementById(boxId);
+            
+            let html = '';
+            if (sender === 'user') {
+                html = `
+                    <div class="flex justify-end animate-fade-in">
+                        <div class="bg-blue-900 text-white p-3 rounded-2xl rounded-tr-none text-xs font-medium max-w-[85%] shadow">
+                            ${msg}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Limpiar texto para síntesis de voz
+                const cleanText = msg.replace(/['"*#]/g, '');
+                html = `
+                    <div class="flex items-start gap-2.5 animate-fade-in">
+                        <div class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">AMI</div>
+                        <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-200 text-slate-800 text-xs shadow-sm space-y-2 max-w-[85%]">
+                            <p class="leading-relaxed">${msg}</p>
+                            <button onclick="speakText('${cleanText}')" class="text-[10px] text-sky-600 font-bold hover:underline flex items-center gap-1 bg-sky-50 px-2 py-1 rounded-md w-max">
+                                <i class="fa-solid fa-volume-high"></i> Escuchar respuesta
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            box.innerHTML += html;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // --- SÍNTESIS DE VOZ Y DICTADO ---
+        function speakText(txt) {
+            if('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(txt);
+                u.lang = 'es-ES';
+                u.rate = 1;
+                window.speechSynthesis.speak(u);
+            } else {
+                alert("Tu navegador no soporta la lectura en voz alta.");
+            }
+        }
+
+        let recognition = null;
+
+        function toggleDictado(inputId, btnId) {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("Tu navegador no soporta el dictado por voz. Te recomendamos usar Google Chrome.");
+                return;
+            }
+
+            const btn = document.getElementById(btnId);
+            const input = document.getElementById(inputId);
+
+            if (btn.classList.contains('mic-active')) {
+                if (recognition) recognition.stop();
+                btn.classList.remove('mic-active');
+                btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-BO'; // Español Bolivia
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = function() {
+                btn.classList.add('mic-active');
+                btn.innerHTML = '<i class="fa-solid fa-stop"></i>';
+                input.placeholder = "Escuchando...";
+            };
+
+            recognition.onresult = function(event) {
+                const speechResult = event.results[0][0].transcript;
+                input.value = speechResult;
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Error de reconocimiento de voz:", event.error);
+                btn.classList.remove('mic-active');
+                btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                input.placeholder = "Escribe tu consulta legal...";
+            };
+
+            recognition.onend = function() {
+                btn.classList.remove('mic-active');
+                btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                input.placeholder = "Escribe tu consulta legal...";
+            };
+
+            recognition.start();
+        }
+
+        // --- RENDERIZADORES DE LISTAS ---
+        function toggleAccessibilityModal() { document.getElementById('accessibilityModal').classList.toggle('hidden'); }
+
+        function renderDemoCards() {
+            const container = document.getElementById('demoCardsGrid');
+            let html = "";
+            demoDatabase.forEach(p => {
+                html += `
+                    <div onclick="selectDemoUser('${p.ci}')" class="bg-slate-800 hover:bg-slate-750 hover:border-amber-400 border border-slate-700 p-3.5 rounded-2xl cursor-pointer transition flex flex-col justify-between group space-y-2 shadow-sm">
+                        <div>
+                            <div class="flex items-center justify-between text-[10px] text-amber-400 font-bold mb-1">
+                                <span><i class="fa-solid fa-id-card"></i> ${p.ci}</span>
+                                <span class="bg-slate-900 text-slate-300 px-1.5 py-0.5 rounded">${p.dob}</span>
+                            </div>
+                            <h5 class="font-extrabold text-xs text-white group-hover:text-amber-300 line-clamp-1">${p.nombre}</h5>
+                            <p class="text-[11px] text-slate-400 mt-1 line-clamp-1"><i class="fa-solid fa-location-dot text-amber-500"></i> ${p.ubicacion}</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-700/60 flex justify-between items-center text-[10px]">
+                            <span class="text-slate-400 font-mono">${p.macrodistrito.replace('Macrodistrito ', '')}</span>
+                            <span class="text-amber-400 font-bold group-hover:underline">Probar <i class="fa-solid fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderGaceta() {
+            const container = document.getElementById('gacetaGrid');
+            let html = "";
+            gacetaData.forEach(g => {
+                html += `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-md space-y-3 flex flex-col justify-between">
+                        <div class="space-y-2">
+                            <span class="bg-emerald-100 text-emerald-800 font-bold text-[10px] px-2.5 py-1 rounded-full uppercase">${g.tag}</span>
+                            <h4 class="font-black text-slate-900 text-base">${g.titulo}</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">${g.desc}</p>
+                        </div>
+                        <button onclick="alert('Descargando PDF oficial de la Gaceta Municipal...')" class="bg-slate-950 hover:bg-slate-800 text-amber-400 font-bold text-xs py-2 px-4 rounded-xl transition flex items-center justify-center gap-1.5 w-full">
+                            <i class="fa-solid fa-file-pdf text-amber-500"></i> Descargar Documento
+                        </button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        window.onload = function() {
+            renderDemoCards();
+            renderGaceta();
+        };
+    </script>
+</body>
+</html>
